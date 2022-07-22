@@ -5,6 +5,7 @@ use rand::Rng;
 
 
 const SIZE: usize = 256;
+const MAPSIZE: usize = 400;
 //const permTable: [u32; SIZE*2] = createPermutationTable();
 //const gradTable: [Vector2D; SIZE] = createGradientTable();
 
@@ -104,6 +105,8 @@ fn createPermutationTable() -> [u32; SIZE*2] {
     table
 }
 
+// another option to consider for generating random gradients:
+// roll a single number between 0 and 2π. Call it θ. Your vector is (cos θ, sin θ). 
 fn createGradientTable() -> [Vector2D; SIZE] {
     let mut table: [Vector2D; SIZE] = [Vector2D{x: 0.0, y: 0.0}; SIZE];
     let mut rng = rand::thread_rng();
@@ -181,12 +184,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     //println!("\nnoise val of (0.0, 0.0): {}", noise2D(0.0, 0.0, permTable, gradTable));
     //println!("noise val of (0.1, 0.1): {}", noise2D(0.1, 0.1, permTable, gradTable));
 
-    let mut noiseMap = [[0.0; SIZE]; SIZE];
-    let mut heightMap = [['$'; SIZE]; SIZE];
+    let mut noiseMap = [[0.0; MAPSIZE]; MAPSIZE];
+    let mut heightMap = [['$'; MAPSIZE]; MAPSIZE];
 
     // generate 2D noisemap of SIZExSIZE dimensions
-    for y in 0..SIZE {
-        for x in 0..SIZE {
+    for y in 0..MAPSIZE {
+        for x in 0..MAPSIZE {
             let mut noise = noise2D(x as f32 * 0.01, y as f32 * 0.01, permTable, gradTable);
 
             noise += 1.0;
@@ -198,37 +201,59 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let mut img = RgbImage::new(
-        SIZE.try_into().unwrap(), SIZE.try_into().unwrap()
+        MAPSIZE.try_into().unwrap(), MAPSIZE.try_into().unwrap()
+    );
+
+    let mut img2 = RgbImage::new(
+        MAPSIZE.try_into().unwrap(), MAPSIZE.try_into().unwrap()
     );
 
     // convert each noise float value to a text tile for viewability
-    for y in 0..SIZE {
-        for x in 0..SIZE {
+    let mut deepWaterCount = 0;
+    let mut waterCount = 0;
+    let mut landCount = 0;
+    let mut hillCount = 0;
+    let mut mountainCount = 0;
+
+    for y in 0..MAPSIZE {
+        for x in 0..MAPSIZE {
             let tile;
-            let color;
+            let color;  // color for generating a very basic terrain map
+            let color2;         // more accurate color from each float val
             let noise = noiseMap[y][x];
             if noise < 0.2 {
                 //tile = '*';
                 tile = 'W'; // deep water
                 color = Rgb([16, 41, 115]); // dark blue
+
+                deepWaterCount += 1;
             } else if noise >= 0.2 && noise < 0.4 {
                 //tile = '+';
                 tile = 'w'; // water
                 color = Rgb([45, 83, 196]); // blue
+                waterCount += 1;
             } else if noise >= 0.4 && noise < 0.6 {
                 //tile = '+';
                 tile = 'L'; // land
                 color = Rgb([18, 135, 31]); // green
+                landCount += 1;
             } else if noise >= 0.6 && noise < 0.8 {
                 //tile = 'O';
                 tile = 'H'; // hill
                 color = Rgb([84, 46, 13]); // brown
+                hillCount += 1;
             } else {
                 //tile = '^';
                 tile = 'M'; // mountain
                 color = Rgb([65, 65, 65]); // gray
+                mountainCount += 1;
             }
+            
+            let noiseRGB = (noise * 255.0).round() as u8;
+            color2 = Rgb([noiseRGB, noiseRGB, noiseRGB]);
+
             img.put_pixel(x.try_into().unwrap(), y.try_into().unwrap(), color);
+            img2.put_pixel(x.try_into().unwrap(), y.try_into().unwrap(), color2);
             heightMap[y][x] = tile;
         }
     }
@@ -245,6 +270,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     file.flush()?;
     img.save("tilemap.png")?;
+    img2.save("tilemap2.png")?;
 
     //println!("noisemap: \n{:#?}", noiseMap);
     /*for row in heightMap  {
@@ -257,7 +283,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     
 
-
+    println!("Count of deep water tiles: {}", deepWaterCount);
+    println!("Count of water tiles: {}", waterCount);
+    println!("Count of land tiles: {}", landCount);
+    println!("Count of hill tiles: {}", hillCount);
+    println!("Count of mountain tiles: {}", mountainCount);
 
     Ok(())
 
