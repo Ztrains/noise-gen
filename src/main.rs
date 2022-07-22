@@ -1,5 +1,6 @@
-use std::{fs::File, io::{LineWriter, Write}};
+use std::{fs::File, io::{LineWriter, Write}, error::Error};
 
+use image::{RgbImage, Rgb};
 use rand::Rng;
 
 
@@ -172,7 +173,7 @@ fn lerp(weight: f32, dot1: f32, dot2: f32) -> f32 {
     dot1 + weight*(dot2 - dot1)
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<(), Box<dyn Error>> {
     let permTable = createPermutationTable();
     let gradTable = createGradientTable();
 
@@ -196,31 +197,45 @@ fn main() -> std::io::Result<()> {
         
     }
 
+    let mut img = RgbImage::new(
+        SIZE.try_into().unwrap(), SIZE.try_into().unwrap()
+    );
+
     // convert each noise float value to a text tile for viewability
     for y in 0..SIZE {
         for x in 0..SIZE {
             let tile;
+            let color;
             let noise = noiseMap[y][x];
-            if noise < 0.4 {
+            if noise < 0.2 {
                 //tile = '*';
-                tile = 'W'; // water
-            } else if noise >= 0.3 && noise < 0.6 {
+                tile = 'W'; // deep water
+                color = Rgb([16, 41, 115]); // dark blue
+            } else if noise >= 0.2 && noise < 0.4 {
+                //tile = '+';
+                tile = 'w'; // water
+                color = Rgb([45, 83, 196]); // blue
+            } else if noise >= 0.4 && noise < 0.6 {
                 //tile = '+';
                 tile = 'L'; // land
-            } else if noise >= 0.6 && noise < 0.9 {
+                color = Rgb([18, 135, 31]); // green
+            } else if noise >= 0.6 && noise < 0.8 {
                 //tile = 'O';
                 tile = 'H'; // hill
+                color = Rgb([84, 46, 13]); // brown
             } else {
                 //tile = '^';
                 tile = 'M'; // mountain
+                color = Rgb([65, 65, 65]); // gray
             }
-
+            img.put_pixel(x.try_into().unwrap(), y.try_into().unwrap(), color);
             heightMap[y][x] = tile;
         }
     }
 
     let file = File::create("heightmap.txt")?;
     let mut file = LineWriter::new(file);
+    
 
     for row in heightMap {
         let tileRow = String::from_iter(row);
@@ -229,6 +244,7 @@ fn main() -> std::io::Result<()> {
     }
 
     file.flush()?;
+    img.save("tilemap.png")?;
 
     //println!("noisemap: \n{:#?}", noiseMap);
     /*for row in heightMap  {
@@ -238,6 +254,10 @@ fn main() -> std::io::Result<()> {
         print!("\n");
         //println!("{:?}", row);
     }*/
+
+    
+
+
 
     Ok(())
 
