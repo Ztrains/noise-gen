@@ -8,4 +8,5 @@ This app generates a 2D array of noise values using the Perlin Noise algorithm.
 - https://www.scratchapixel.com/lessons/procedural-generation-virtual-worlds/perlin-noise-part-2
 - https://mzucker.github.io/html/perlin-noise-math-faq.html
 - https://rtouti.github.io/graphics/perlin-noise-algorithm
+- https://medium.com/@yvanscher/playing-with-perlin-noise-generating-realistic-archipelagos-b59f004d8401
 - https://youtu.be/IKB1hWWedMk
