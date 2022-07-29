@@ -1,4 +1,4 @@
-use std::{fs::File, io::{LineWriter, Write}, error::Error};
+use std::{fs::File, io::{LineWriter, Write}, error::Error, f32::consts::SQRT_2};
 
 use image::{RgbImage, Rgb};
 
@@ -33,6 +33,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             }
 
+            // adding octaves increase the range of noise output, need to get it back between (-1.0, 1.0)
+            //noise /= 2.0 - 2.0_f32.powi(1 - OCTAVES as i32);
+            //noise *= SQRT_2 / 2.0;
+
 
             noise += 1.0;
             noise *= 0.5;
@@ -56,6 +60,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut land_count = 0;
     let mut hill_count = 0;
     let mut mountain_count = 0;
+    let mut snow_count = 0;
+    let mut sand_count = 0;
 
     let mut avg: f32 = 0.0;
     let mut lowest = 1.0;
@@ -77,21 +83,27 @@ fn main() -> Result<(), Box<dyn Error>> {
                 //tile = 'w'; // water
                 color = Rgb([45, 83, 196]); // blue
                 water_count += 1;
-            } else if noise >= 0.4 && noise < 0.6 {
+            } else if noise >= 0.4 && noise < 0.45 {
+                color = Rgb([235, 204, 150]); // tan
+                sand_count += 1;
+            } else if noise >= 0.45 && noise < 0.65 {
                 //tile = '+';
                 //tile = 'L'; // land
                 color = Rgb([18, 135, 31]); // green
                 land_count += 1;
-            } else if noise >= 0.6 && noise < 0.8 {
+            } else if noise >= 0.65 && noise < 0.8 {
                 //tile = 'O';
                 //tile = 'H'; // hill
                 color = Rgb([84, 46, 13]); // brown
                 hill_count += 1;
-            } else {
+            } else if noise >= 0.8 && noise < 0.95{
                 //tile = '^';
                 //tile = 'M'; // mountain
                 color = Rgb([65, 65, 65]); // gray
                 mountain_count += 1;
+            } else {
+                color = Rgb([250, 250, 250]);   //white
+                snow_count += 1;
             }
             
             /*let noise_rgb = (noise * 255.0).round() as u8;
@@ -137,9 +149,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     println!("Count of deep water tiles: {}", deep_water_count);
     println!("Count of water tiles: {}", water_count);
+    println!("Count of sand tiles: {}", sand_count);
     println!("Count of land tiles: {}", land_count);
     println!("Count of hill tiles: {}", hill_count);
     println!("Count of mountain tiles: {}", mountain_count);
+    println!("Count of snow tiles: {}", snow_count);
 
     avg /= (MAPSIZE * MAPSIZE) as f32;
     println!("average noise value: {}", avg);
