@@ -6,8 +6,8 @@ use noise_gen::noise_2d;
 use noise_gen::table::*;
 
 
-const MAPSIZE: usize = 512;
-const OCTAVES: u32 = 7;
+const MAPSIZE: usize = 500;
+const OCTAVES: u32 = 8;
 
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -24,21 +24,18 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut freq = 0.005;
             let mut ampl = 1.0;
 
-            for oc in 0..OCTAVES {
+            for _ in 0..OCTAVES {
                 let val = ampl * noise_2d(x as f32 * freq, y as f32 * freq, perm_table, grad_table);
                 noise += val;
 
                 ampl *= 0.5;
                 freq *= 2.0;
 
-                /*if x >= 398 && x < 405 && y >= 398 && y < 400 {
-                    println!("noise at octave {} for ({}, {}): {}", oc, x, y, noise);
-                }*/
             }
 
 
             noise += 1.0;
-            noise /= 2.0;
+            noise *= 0.5;
 
             noise_map[y][x] = noise;
         }
