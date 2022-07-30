@@ -65,15 +65,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         for x in 0..MAPSIZE {
             let color;  // color of tile for heightmap
             let noise = noise_map[y][x];
-            if noise < 0.2 {
+            if noise < 0.225 {
                 color = Rgb([16, 41, 115]);     // dark blue (deep water)
-            } else if noise < 0.4 {
-                color = Rgb([45, 83, 196]);     // blue (water)
             } else if noise < 0.45 {
+                color = Rgb([45, 83, 196]);     // blue (water)
+            } else if noise < 0.50 {
                 color = Rgb([235, 204, 150]);   // tan (beach)
             } else if noise < 0.65 {
                 color = Rgb([18, 135, 31]);     // green (land)
-            } else if noise < 0.8 {
+            } else if noise < 0.85 {
                 color = Rgb([84, 46, 13]);      // brown (hill)
             } else if noise < 0.95 {
                 color = Rgb([65, 65, 65]);      // gray (mountain)
