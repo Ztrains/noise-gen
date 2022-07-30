@@ -1,6 +1,6 @@
 # noise-gen
 
- This library generates noise values using the (improved) Perlin Noise algorithm.
+ This library written fully in Rust generates noise values using the (improved) Perlin Noise algorithm.
  
  The main function uses the library to generate an image of a heightmap colored in to look like an terrain map.
 
