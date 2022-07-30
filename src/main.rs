@@ -1,4 +1,4 @@
-use std::time::Instant;
+
 use std::{error::Error};
 
 use image::{RgbImage, Rgb};
@@ -12,10 +12,8 @@ const OCTAVES: u32 = 8;
 
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let now = Instant::now();
+    
     let perm_table = create_permutation_table();
-    let grad_table = create_gradient_table();
-
     let mut noise_map = [[0.0; MAPSIZE]; MAPSIZE];
 
     // generate 2D heightmap of MAPSIZExMAPSIZE dimensions
@@ -26,19 +24,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut ampl = 1.0;
 
             /* when OCTAVES > 1, Fractal Brownian Motion is used, which layers
-            multiple octaves of noise for a more realistic fractal look on edges */
+            multiple octaves of noise for a more realistic fractal output on edges */
             for _ in 0..OCTAVES {
-                let val = ampl * noise_2d(x as f32 * freq, y as f32 * freq, perm_table, grad_table);
+                let val = ampl * noise_2d(x as f32 * freq, y as f32 * freq, perm_table);
                 noise += val;
 
                 ampl *= 0.5;
                 freq *= 2.0;
-
             }
-
-            // adding octaves increase the range of noise output, need to get it back between (-1.0, 1.0)
-            //noise /= 2.0 - 2.0_f32.powi(1 - OCTAVES as i32);
-            //noise *= SQRT_2 / 2.0;
 
             noise += 1.0;
             noise *= 0.5;
@@ -46,18 +39,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             // can optimize by adding to img here instead of adding to noise_map
             noise_map[y][x] = noise;
         }
-        
     }
 
     let mut img = RgbImage::new(
         MAPSIZE.try_into().unwrap(), MAPSIZE.try_into().unwrap()
     );
-
-    // get counts of each heightmap terrain tile for debugging
-    let mut avg: f32 = 0.0;
-    let mut lowest = 1.0;
-    let mut highest = 0.0;
-
 
     /* instead of iterating through noise_map here for image generation, 
     can be optimized by doing this inside the noise loop above */
@@ -84,29 +70,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             // apply grayscale instead of color
             /*let noise_gray = (noise * 255.0).round() as u8;
             color = Rgb([noise_gray, noise_gray, noise_gray]);*/
-
             
             img.put_pixel(x as u32, y as u32, color);
-            
-            // calculating avg, high, and low noise values
-            avg += noise;
-            if noise < lowest {
-                lowest = noise;
-            } else if noise > highest{
-                highest = noise;
-            }
         }
     }
 
     img.save("tilemap.png")?;
-
-
-    avg /= (MAPSIZE * MAPSIZE) as f32;
-    println!("average noise value: {}", avg);
-    println!("lowest noise value: {}", lowest);
-    println!("highest noise value: {}", highest);
-
-    println!("Time elapsed: {:?}", now.elapsed());
     Ok(())
-
 }

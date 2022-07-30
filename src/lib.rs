@@ -1,4 +1,3 @@
-// after distance vector edits
 
 pub mod vector_2d;
 pub mod table;
@@ -6,32 +5,18 @@ pub mod table;
 pub const SIZE: usize = 256;
 
 use table::get_constant_vector;
+use vector_2d::Vector2D;
 
-use crate::vector_2d::Vector2D;
 
+pub fn noise_2d(x: f32, y: f32, perm_table: [u32; SIZE*2]) -> f32 {
 
-pub fn noise_2d(x: f32, y: f32, perm_table: [u32; SIZE*2], grad_table: [Vector2D; SIZE]) -> f32 {
-
-    //let permTable: [u32; SIZE*2] = createPermutationTable();
-    //let gradTable: [Vector2D; SIZE] = createGradientTable();
-
-    //get points x and y mod SIZE for permutation table lookup
-    
-
-    // calculate grid points
-    /*let x0 = x.floor() as usize % SIZE;
-    let x1 = x0 + 1;
-    let y0 = y.floor() as usize % SIZE;
-    let y1 = y0 + 1;*/
-
-    // get x,y for permutation table lookup
+    // get xp,xy for permutation table lookup
     let xp = x.floor() as usize % SIZE;
     let yp = y.floor() as usize % SIZE;
 
     // calculate interpolation weights
     let xf = x - x.floor();
     let yf = y - y.floor();
-
 
     // calculate vectors from each grid corner to point (x,y)
     let vec_bot_left: Vector2D = Vector2D {
@@ -51,25 +36,17 @@ pub fn noise_2d(x: f32, y: f32, perm_table: [u32; SIZE*2], grad_table: [Vector2D
         y: yf - 1.0
     };
 
-
     // get pseudorandom value (hash) from permutation table for each grid corner
     let val_bot_left: u32 = perm_table[perm_table[xp] as usize + yp];
     let val_bot_right: u32 = perm_table[perm_table[xp+1] as usize + yp];
     let val_top_left: u32 = perm_table[perm_table[xp] as usize + yp+1];
     let val_top_right: u32 = perm_table[perm_table[xp+1] as usize + yp+1];
 
-    // get associated random gradient for each hash (Option 1)
-    /*let grad_bot_left: Vector2D = grad_table[val_bot_left as usize];
-    let grad_bot_right: Vector2D = grad_table[val_bot_right as usize];
-    let grad_top_left: Vector2D = grad_table[val_top_left as usize];
-    let grad_top_right: Vector2D = grad_table[val_top_right as usize];*/
-
     // get associated constant vector for each hash (Option 2)
     let grad_bot_left: Vector2D = get_constant_vector(val_bot_left);
     let grad_bot_right: Vector2D = get_constant_vector(val_bot_right);
     let grad_top_left: Vector2D = get_constant_vector(val_top_left);
     let grad_top_right: Vector2D = get_constant_vector(val_top_right);
-
 
     // calculate dot product of gradient and vector for each grid corner
     let dot_bot_left = vec_bot_left.dot(grad_bot_left);
@@ -102,10 +79,10 @@ pub fn lerp(weight: f32, dot1: f32, dot2: f32) -> f32 {
     //weight * (dot2 - dot1) + dot1
 
     // smoothstep interpolation
-    (dot2 - dot1) * (3.0 - weight * 2.0) * weight * weight + dot1
+    //(dot2 - dot1) * (3.0 - weight * 2.0) * weight * weight + dot1
 
     // smootherstep interpolation
-    //(dot2 - dot1) * ((weight * (weight * 6.0 - 15.0) + 10.0) * weight * weight * weight) + dot1
+    (dot2 - dot1) * ((weight * (weight * 6.0 - 15.0) + 10.0) * weight * weight * weight) + dot1
 
 
 }

@@ -1,3 +1,4 @@
+
 #[derive(Clone, Copy, Debug)]
 pub struct Vector2D {
     pub x: f32,
@@ -5,7 +6,7 @@ pub struct Vector2D {
 }
 
 impl Vector2D {
-    // constructor
+
     pub fn new(x: f32, y: f32) -> Vector2D {
         Vector2D { x, y }
     }

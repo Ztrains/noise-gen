@@ -1,6 +1,8 @@
 # noise-gen
 
-This app generates a 2D array of noise values using the Perlin Noise algorithm.
+ This library generates noise values using the (improved) Perlin Noise algorithm.
+ 
+ The main function uses the library to generate an image of a heightmap colored in to look like an terrain map.
 
 ### Links that were very helpful to understand Perlin Noise and how it works
 
