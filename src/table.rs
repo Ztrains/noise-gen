@@ -66,6 +66,16 @@ pub fn create_gradient_table() -> [Vector2D; SIZE] {
     table
 }
 
+pub fn get_constant_vector(perm: u32) -> Vector2D {
+    let val = perm & 3;
+    match val {
+        0 => Vector2D { x: 1.0, y: 1.0 },
+        1 => Vector2D { x: -1.0, y: 1.0 },
+        2 => Vector2D { x: 1.0, y: -1.0 },
+        _ => Vector2D { x: -1.0, y: -1.0 },
+    }
+}
+
 fn shuffle(arr: &mut [u32]) {
     // use Fisher-Yates algorithm to shuffle array in place
     // (1..arr.len()).rev() means to start from end of array, ignoring first element

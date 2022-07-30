@@ -5,6 +5,8 @@ pub mod table;
 
 pub const SIZE: usize = 256;
 
+use table::get_constant_vector;
+
 use crate::vector_2d::Vector2D;
 
 
@@ -56,16 +58,17 @@ pub fn noise_2d(x: f32, y: f32, perm_table: [u32; SIZE*2], grad_table: [Vector2D
     let val_top_left: u32 = perm_table[perm_table[xp] as usize + yp+1];
     let val_top_right: u32 = perm_table[perm_table[xp+1] as usize + yp+1];
 
-    // get associated gradient for each hash
-    let grad_bot_left: Vector2D = grad_table[val_bot_left as usize];
+    // get associated random gradient for each hash (Option 1)
+    /*let grad_bot_left: Vector2D = grad_table[val_bot_left as usize];
     let grad_bot_right: Vector2D = grad_table[val_bot_right as usize];
     let grad_top_left: Vector2D = grad_table[val_top_left as usize];
-    let grad_top_right: Vector2D = grad_table[val_top_right as usize];
+    let grad_top_right: Vector2D = grad_table[val_top_right as usize];*/
 
-    /*let grad_bot_left: Vector2D = get_constant_vector(val_bot_left);
+    // get associated constant vector for each hash (Option 2)
+    let grad_bot_left: Vector2D = get_constant_vector(val_bot_left);
     let grad_bot_right: Vector2D = get_constant_vector(val_bot_right);
     let grad_top_left: Vector2D = get_constant_vector(val_top_left);
-    let grad_top_right: Vector2D = get_constant_vector(val_top_right);*/
+    let grad_top_right: Vector2D = get_constant_vector(val_top_right);
 
 
     // calculate dot product of gradient and vector for each grid corner
@@ -77,9 +80,6 @@ pub fn noise_2d(x: f32, y: f32, perm_table: [u32; SIZE*2], grad_table: [Vector2D
     // apply fade to weights
     let fade_x = fade(xf);
     let fade_y = fade(yf);
-
-    //println!("normal dx,dy: {},{}", dx, dy);
-    //println!("faded dx,dy: {},{}", fade_x, fade_y);
 
     // perform linear interpolation for left and right sides of grid
     let left_lerp = lerp(fade_y, dot_bot_left, dot_top_left);

@@ -1,4 +1,5 @@
-use std::{fs::File, io::{LineWriter, Write}, error::Error, f32::consts::SQRT_2};
+use std::time::Instant;
+use std::{error::Error};
 
 use image::{RgbImage, Rgb};
 
@@ -11,19 +12,21 @@ const OCTAVES: u32 = 8;
 
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let now = Instant::now();
     let perm_table = create_permutation_table();
     let grad_table = create_gradient_table();
 
     let mut noise_map = [[0.0; MAPSIZE]; MAPSIZE];
-    //let mut height_map = [['$'; MAPSIZE]; MAPSIZE];
 
-    // generate 2D noisemap of SIZExSIZE dimensions
+    // generate 2D heightmap of MAPSIZExMAPSIZE dimensions
     for y in 0..MAPSIZE {
         for x in 0..MAPSIZE {
             let mut noise = 0.0;
             let mut freq = 0.005;
             let mut ampl = 1.0;
 
+            /* when OCTAVES > 1, Fractal Brownian Motion is used, which layers
+            multiple octaves of noise for a more realistic fractal look on edges */
             for _ in 0..OCTAVES {
                 let val = ampl * noise_2d(x as f32 * freq, y as f32 * freq, perm_table, grad_table);
                 noise += val;
@@ -37,10 +40,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             //noise /= 2.0 - 2.0_f32.powi(1 - OCTAVES as i32);
             //noise *= SQRT_2 / 2.0;
 
-
             noise += 1.0;
             noise *= 0.5;
 
+            // can optimize by adding to img here instead of adding to noise_map
             noise_map[y][x] = noise;
         }
         
@@ -50,68 +53,42 @@ fn main() -> Result<(), Box<dyn Error>> {
         MAPSIZE.try_into().unwrap(), MAPSIZE.try_into().unwrap()
     );
 
-    /*let mut img2 = RgbImage::new(
-        MAPSIZE.try_into().unwrap(), MAPSIZE.try_into().unwrap()
-    );*/
-
-    // convert each noise float value to a text tile for viewability
-    let mut deep_water_count = 0;
-    let mut water_count = 0;
-    let mut land_count = 0;
-    let mut hill_count = 0;
-    let mut mountain_count = 0;
-    let mut snow_count = 0;
-    let mut sand_count = 0;
-
+    // get counts of each heightmap terrain tile for debugging
     let mut avg: f32 = 0.0;
     let mut lowest = 1.0;
     let mut highest = 0.0;
 
+
+    /* instead of iterating through noise_map here for image generation, 
+    can be optimized by doing this inside the noise loop above */
     for y in 0..MAPSIZE {
         for x in 0..MAPSIZE {
-            //let tile;
-            let color;  // color for generating a very basic terrain map
-            //let color2;         // more accurate color from each float val
+            let color;  // color of tile for heightmap
             let noise = noise_map[y][x];
             if noise < 0.2 {
-                //tile = '*';
-                //tile = 'W'; // deep water
-                color = Rgb([16, 41, 115]); // dark blue
-                deep_water_count += 1;
-            } else if noise >= 0.2 && noise < 0.4 {
-                //tile = '+';
-                //tile = 'w'; // water
-                color = Rgb([45, 83, 196]); // blue
-                water_count += 1;
-            } else if noise >= 0.4 && noise < 0.45 {
-                color = Rgb([235, 204, 150]); // tan
-                sand_count += 1;
-            } else if noise >= 0.45 && noise < 0.65 {
-                //tile = '+';
-                //tile = 'L'; // land
-                color = Rgb([18, 135, 31]); // green
-                land_count += 1;
-            } else if noise >= 0.65 && noise < 0.8 {
-                //tile = 'O';
-                //tile = 'H'; // hill
-                color = Rgb([84, 46, 13]); // brown
-                hill_count += 1;
-            } else if noise >= 0.8 && noise < 0.95{
-                //tile = '^';
-                //tile = 'M'; // mountain
-                color = Rgb([65, 65, 65]); // gray
-                mountain_count += 1;
+                color = Rgb([16, 41, 115]);     // dark blue (deep water)
+            } else if noise < 0.4 {
+                color = Rgb([45, 83, 196]);     // blue (water)
+            } else if noise < 0.45 {
+                color = Rgb([235, 204, 150]);   // tan (beach)
+            } else if noise < 0.65 {
+                color = Rgb([18, 135, 31]);     // green (land)
+            } else if noise < 0.8 {
+                color = Rgb([84, 46, 13]);      // brown (hill)
+            } else if noise < 0.95 {
+                color = Rgb([65, 65, 65]);      // gray (mountain)
             } else {
-                color = Rgb([250, 250, 250]);   //white
-                snow_count += 1;
+                color = Rgb([250, 250, 250]);   //white (snow)
             }
             
-            /*let noise_rgb = (noise * 255.0).round() as u8;
-            color2 = Rgb([noise_rgb, noise_rgb, noise_rgb]);*/
+            // apply grayscale instead of color
+            /*let noise_gray = (noise * 255.0).round() as u8;
+            color = Rgb([noise_gray, noise_gray, noise_gray]);*/
 
-            img.put_pixel(x.try_into().unwrap(), y.try_into().unwrap(), color);
-            /*img2.put_pixel(x.try_into().unwrap(), y.try_into().unwrap(), color2);
-            height_map[y][x] = tile;*/
+            
+            img.put_pixel(x as u32, y as u32, color);
+            
+            // calculating avg, high, and low noise values
             avg += noise;
             if noise < lowest {
                 lowest = noise;
@@ -120,46 +97,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         }
     }
-    
 
-    let file = File::create("heightmap.txt")?;
-    let mut file = LineWriter::new(file);
-    
-
-    /*for row in height_map {
-        let tile_row = String::from_iter(row);
-        file.write_all(tile_row.as_bytes())?;
-        file.write_all(b"\n")?;
-    }*/
-
-    file.flush()?;
     img.save("tilemap.png")?;
-    //img2.save("tilemap2.png")?;
 
-    //println!("noisemap: \n{:#?}", noiseMap);
-    /*for row in heightMap  {
-        for tile in row {
-            print!("{}", tile);
-        }
-        print!("\n");
-        //println!("{:?}", row);
-    }*/
-
-    
-
-    println!("Count of deep water tiles: {}", deep_water_count);
-    println!("Count of water tiles: {}", water_count);
-    println!("Count of sand tiles: {}", sand_count);
-    println!("Count of land tiles: {}", land_count);
-    println!("Count of hill tiles: {}", hill_count);
-    println!("Count of mountain tiles: {}", mountain_count);
-    println!("Count of snow tiles: {}", snow_count);
 
     avg /= (MAPSIZE * MAPSIZE) as f32;
     println!("average noise value: {}", avg);
     println!("lowest noise value: {}", lowest);
     println!("highest noise value: {}", highest);
 
+    println!("Time elapsed: {:?}", now.elapsed());
     Ok(())
 
 }
