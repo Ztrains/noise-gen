@@ -4,6 +4,10 @@
  
  The main function uses the library to generate an image of a heightmap colored in to look like an terrain map.
 
+
+ ### <ins>Example generation (with color added to look like a terrain map)</ins>
+ ![sample](sample_map.png)
+
 ### Links that were very helpful to understand Perlin Noise and how it works
 
 - https://en.wikipedia.org/wiki/Perlin_noise
