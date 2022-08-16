@@ -14,7 +14,9 @@ const OCTAVES: u32 = 8;
 fn main() -> Result<(), Box<dyn Error>> {
     
     let perm_table = create_permutation_table();
-    let mut noise_map = [[0.0; MAPSIZE]; MAPSIZE];
+    let mut img = RgbImage::new(
+        MAPSIZE.try_into().unwrap(), MAPSIZE.try_into().unwrap()
+    );
 
     // generate 2D heightmap of MAPSIZExMAPSIZE dimensions
     for y in 0..MAPSIZE {
@@ -29,7 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let val = ampl * noise_2d(x as f32 * freq, y as f32 * freq, perm_table);
                 noise += val;
 
-                ampl *= 0.55;    // smaller values create a smoother output vertically (actual noise value)
+                ampl *= 0.50;   // smaller values create a smoother output vertically (actual noise value)
                 freq *= 2.0;    // smaller values create a smoother output horizontally (difference between adjacent values)
             }
 
@@ -37,26 +39,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             noise += 1.0;
             noise *= 0.5;
 
-            // can optimize by adding to img here instead of adding to noise_map
-            noise_map[y][x] = noise;
-        }
-    }
-
-    let mut img = RgbImage::new(
-        MAPSIZE.try_into().unwrap(), MAPSIZE.try_into().unwrap()
-    );
-
-    /* instead of iterating through noise_map here for image generation, 
-    can be optimized by doing this inside the noise loop above */
-    for y in 0..MAPSIZE {
-        for x in 0..MAPSIZE {
-            let color;  // color of tile for heightmap
-            let noise = noise_map[y][x];
+            // color in noisemap to look like a cartography map
+            let color;
             if noise < 0.225 {
                 color = Rgb([16, 41, 115]);     // dark blue (deep water)
             } else if noise < 0.45 {
                 color = Rgb([45, 83, 196]);     // blue (water)
-            } else if noise < 0.50 {
+            } else if noise < 0.485 {
                 color = Rgb([235, 204, 150]);   // tan (beach)
             } else if noise < 0.65 {
                 color = Rgb([18, 135, 31]);     // green (land)
