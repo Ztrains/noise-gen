@@ -19,9 +19,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     // generate 2D heightmap of MAPSIZExMAPSIZE dimensions
     for y in 0..MAPSIZE {
         for x in 0..MAPSIZE {
-            let mut noise = 0.0;
-            let mut freq = 0.005;
-            let mut ampl = 1.0;
+            let mut noise = 0.0;    
+            let mut freq = 0.005;   // smaller frequency creates a more "zoomed-in" look
+            let mut ampl = 1.0;     // smaller amplitude means less height variance between peaks and valleys
 
             /* when OCTAVES > 1, Fractal Brownian Motion is used, which layers
             multiple octaves of noise for a more realistic fractal output on edges */
@@ -29,10 +29,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let val = ampl * noise_2d(x as f32 * freq, y as f32 * freq, perm_table);
                 noise += val;
 
-                ampl *= 0.5;
-                freq *= 2.0;
+                ampl *= 0.55;    // smaller values create a smoother output vertically (actual noise value)
+                freq *= 2.0;    // smaller values create a smoother output horizontally (difference between adjacent values)
             }
 
+            // change range of noise values from ±1 to 0-1
             noise += 1.0;
             noise *= 0.5;
 
